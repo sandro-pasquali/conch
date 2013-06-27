@@ -18,51 +18,29 @@ function now() {
   return new Date().getTime();
 }
 
-var lastSendedMessageId = Infinity;
-var lastEventId = null;
-var lastSendedTime = null;
-var msgs = document.createDocumentFragment();
-var es = new EventSource('events');
+//	This will initialize a unidirectional SSE pipe client <- server,
+//	expecting the server to expose a binding service at /login
+//
+var sse = new EventSource('login');
 
-function checkId() {
-  if (lastEventId >= lastSendedMessageId) {
-    lastSendedMessageId = Infinity;
-    var div = document.createElement('div');
-    div.className = 'ping';
-    div.innerHTML = ' (ping: ' + (now() - lastSendedTime).toFixed(0) + 'ms) ';
-    msgs.insertBefore(div, msgs.firstChild);
-  }
-}
-
-es.addEventListener('message', function (event) {
-  lastEventId = +event.lastEventId;
-  var div = document.createElement('div');
-  var text = document.createTextNode(event.data);
-  div.appendChild(text);
-  msgs.insertBefore(div, msgs.firstChild);
-  checkId();
+sse.addEventListener('message', function (event) {
+	console.log("MSG: " + event.data);
 });
 
 
-function post() {
-  var message = document.getElementById('message').value;
-  if (!message) {
-    return false;
-  }
-  document.getElementById('message').value = '';
+function post(form) {
 
-  lastSendedTime = now();
-  lastSendedMessageId = Infinity;
+	var message = encodeURIComponent(document.getElementById("message").value);
 
-  var xhr = new XMLHttpRequest();
-  xhr.open('POST', '?message=' + encodeURIComponent(message), true);
-  xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-  xhr.onreadystatechange = function () {
-    if (xhr.readyState === 4) {
-      lastSendedMessageId = +xhr.responseText || Infinity;
-      checkId();
-    }
-  };
+  	var xhr = new XMLHttpRequest();
+	xhr.open('POST', '/message/' + message, true);
+	xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+	xhr.onreadystatechange = function () {
+		if(xhr.readyState === 4) {
+			console.log("SENT");
+			console.log(this
+		}
+	};
   xhr.send(null);
 
   return false;
@@ -70,21 +48,18 @@ function post() {
 
 window.onload = function () {
 
-  es.addEventListener('open', function() {
-  	console.log("connection opened");
-  });
-  es.addEventListener('error', function() {
-  	console.log(arguments)
-  	console.log("connection error");
-  });
-
-  var m = document.getElementById('msgs');
-  m.appendChild(msgs);
-  msgs = m;
-  document.querySelector("form").onsubmit = function (e) {
-    post();
-    return false;
-  };
+	sse.addEventListener('open', function() {
+		console.log("connection opened");
+	});
+	
+	sse.addEventListener('error', function() {
+		console.log("connection error");
+	});
+	
+	document.querySelector("form").onsubmit = function() {
+		post();
+		return false;
+	};
 };
 
 </script>
@@ -92,12 +67,10 @@ window.onload = function () {
 </head>
 <body>
 
-    <form action="?">
+    <form action="">
     	<input type="text" name="message" id="message" maxlength="140" required />
     	<input type="submit" value="Send message" />
     </form>
-    <div id="msgs"></div>
-
-
+    
 </body>
 </html>

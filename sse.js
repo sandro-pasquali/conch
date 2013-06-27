@@ -1,11 +1,8 @@
 /**
- * eventsource.js
+ * sse.js
  * Available under MIT License (MIT)
  * https://github.com/Yaffle/EventSource/
  */
-
-/*jslint indent: 2, vars: true, plusplus: true */
-/*global setTimeout, clearTimeout, navigator */
 
 (function (global) {
   "use strict";
@@ -361,7 +358,7 @@
       responseBuffer.length = 0;
       wasCR = false;
 
-      xhr.open("GET", url + ((url.indexOf("?", 0) === -1 ? "?" : "&") + "lastEventId=" + encodeURIComponent(lastEventId) + "&r=" + String(Math.random() + 1).slice(2)), true);
+      xhr.open("GET", url, true);
 
       // withCredentials should be setted after "open" for Safari and Chrome (< 19 ?)
       xhr.withCredentials = withCredentials;
